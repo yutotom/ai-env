@@ -1,0 +1,23 @@
+[project]
+name = "uv-env-test"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "torch==2.9.0",
+    "transformers==5.9.0",
+    "trl==1.5.1",
+    "flash-attn @ https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl",
+    "ninja",
+    "packaging",
+    "psutil",
+]
+
+[tool.uv.sources]
+torch = { index = "torch-cu128" }
+
+[[tool.uv.index]]
+name = "torch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
