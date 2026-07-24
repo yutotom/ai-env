@@ -2,15 +2,7 @@
 name = "uv-env-test-vllm"
 version = "0.1.0"
 description = "Separate vLLM environment for uv dependency resolution tests"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.13"
 dependencies = [
     "vllm",
 ]
-
-[tool.uv.sources]
-torch = { index = "torch-cu128" }
-
-[[tool.uv.index]]
-name = "torch-cu128"
-url = "https://download.pytorch.org/whl/cu128"
-explicit = true

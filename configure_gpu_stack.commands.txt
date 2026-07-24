@@ -1,4 +1,4 @@
 nvidia-smi
-nvidia-smi --query-gpu=index,name,driver_version,memory.total --format=csv,noheader
+nvidia-smi --query-gpu=index,name,driver_version,memory.total,compute_cap --format=csv,noheader
 uv --version
-uv sync --dry-run
+uv sync

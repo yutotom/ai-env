@@ -4,7 +4,7 @@ vLLM は PyTorch / CUDA / Transformers との制約が強いため、root の検
 
 ## インストール
 
-CUDA 12.8 の PyTorch index を使う設定です。
+vLLM が標準で要求する PyTorch / CUDA / Transformers の組み合わせをそのまま解決します。root 環境の PyTorch / Transformers とは独立しており、特定の PyTorch CUDA index は指定しません。
 
 ```bash
 cd vllm-env
@@ -17,4 +17,4 @@ uv sync
 uv run python -c "import torch, transformers, vllm; print(torch.__version__); print(transformers.__version__); print(vllm.__version__)"
 ```
 
-この環境も `pyproject.toml` で `torch-cu128` index を指定しています。
+Python は `.python-version` と `requires-python = ">=3.12,<3.13"` により CPython 3.12 に限定しています。
