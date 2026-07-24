@@ -1,8 +1,0 @@
-[project]
-name = "uv-env-test-vllm"
-version = "0.1.0"
-description = "Separate vLLM environment for uv dependency resolution tests"
-requires-python = ">=3.12,<3.13"
-dependencies = [
-    "vllm",
-]
