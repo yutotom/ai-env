@@ -1,6 +1,14 @@
 # uv-env-test
 
-`uv` を使い、Linux 上の NVIDIA GPU 向け AI Python 環境を構築・検証するプロジェクトです。PyTorch / Transformers / TRL / FlashAttention 2 の互換構成を選び、FlashAttention は source build を行わず、公開済みの prebuilt wheel を利用します。
+`uv` を使い、Linux 上の NVIDIA GPU 向け AI Python 環境を構築・検証するプロジェクトです。
+
+PyTorch / Transformers / TRL / FlashAttention 2 の互換構成を選びます。FlashAttention は source build を行わず、公開済みの prebuilt wheel を利用します。
+
+| 目的 | 手順 |
+| --- | --- |
+| リポジトリの固定構成を使う | [固定構成のセットアップ](#固定構成のセットアップ) |
+| マシンに合う構成を選ぶ・更新する | [構成の自動選択・更新](#構成の自動選択更新) |
+| 別のプロジェクトを構成する | [コマンドのインストール](#別プロジェクトでの利用) |
 
 ## 対応環境
 
@@ -17,7 +25,7 @@ Windows、macOS、AMD GPU、CPU のみの環境、CUDA 11 系は対象外です�
 
 ### このリポジトリの固定構成
 
-現在の `pyproject.toml`、`uv.lock`、`.python-version` は Linux x86_64 の NVIDIA GPU 環境向けです。
+現在の [pyproject.toml](pyproject.toml)、[uv.lock](uv.lock)、[.python-version](.python-version) は Linux x86_64 の NVIDIA GPU 環境向けです。
 
 | 項目 | 設定値 |
 | --- | --- |
@@ -31,24 +39,28 @@ Windows、macOS、AMD GPU、CPU のみの環境、CUDA 11 系は対象外です�
 
 ## セットアップ
 
-事前に `uv` と NVIDIA ドライバを用意し、`nvidia-smi` が正常に動作することを確認してください。
+### 事前確認
+
+`uv` と NVIDIA ドライバを用意し、`nvidia-smi` が正常に動作することを確認してください。以下のセットアップコマンドはリポジトリのルートから実行します。
 
 ```bash
 uv --version
 nvidia-smi
 ```
 
-### 固定済みの構成を使う
+`nvidia-smi` が失敗する場合は、先に NVIDIA ドライバの問題を解消してください。構成の自動選択・更新にはネットワーク接続も必要です。
 
-上記の固定構成に対応するマシンで、リポジトリのルートから実行します。
+### 固定構成のセットアップ
+
+[固定構成](#このリポジトリの固定構成)に対応するマシンで実行します。
 
 ```bash
 uv sync
 ```
 
-### マシンに合う構成を選ぶ・更新する
+### 構成の自動選択・更新
 
-別の NVIDIA GPU マシンで初めて構成する場合や、依存関係を最新の互換構成へ更新する場合に使用します。リポジトリのルートから実行してください。
+別の NVIDIA GPU マシンで初めて構成する場合や、依存関係を最新の互換構成へ更新する場合に使用します。
 
 ```bash
 # 選択結果と依存関係の解決を確認する
@@ -58,9 +70,17 @@ uv sync
 ./src/ai_env.py
 ```
 
-スクリプトは GPU・ドライバ情報と公開パッケージを調べ、`pyproject.toml` と `uv.lock` を更新します。実行には `nvidia-smi` とネットワーク接続が必要です。
+スクリプトは GPU・ドライバ情報と公開パッケージを調べ、`pyproject.toml` と `uv.lock` を更新します。選択基準は[自動選択の仕組み](#自動選択の仕組み)を参照してください。
 
-### 別のプロジェクトで使う
+#### dry-run の確認範囲
+
+`--dry-run` は選択した依存構成を一時コピーへ反映し、`uv sync --dry-run` で検証します。解決に失敗すると非ゼロで終了します。
+
+- 対象ディレクトリの設定・lockfile・仮想環境は作成・変更しません。
+- GPU・ネットワークへのアクセスと `uv` キャッシュの更新は発生します。
+- workspace 設定のあるプロジェクトは未対応で、エラーになります。
+
+### 別プロジェクトでの利用
 
 リポジトリのルートでコマンドをインストールし、対象プロジェクトへ移動して実行します。
 
@@ -82,23 +102,7 @@ ai-env
 
 既存 extras の制約が選択結果と競合する場合は、`uv` の解決エラーに従って制約を調整してください。
 
-## 自動選択とオプション
-
-### バージョンの選択ルール
-
-PyTorch は、安定版 FlashAttention 2 の公式 prebuilt wheel が存在する最大バージョンを選びます。Transformers / TRL は PyPI 上の最新バージョンを選び、`uv` で依存関係を解決します。
-
-PyTorch index は、NVIDIA ドライバが対応する CUDA の上限から選択します。これはインストール済み CUDA Toolkit のバージョンではありません。
-
-| ドライバが対応する CUDA の上限 | PyTorch index |
-| --- | --- |
-| 12.6 以上、12.8 未満 | `cu126` |
-| 12.8 以上、13.0 未満 | `cu128` |
-| 13.0 以上 | `cu130` |
-
-FlashAttention wheel は CUDA、PyTorch、Python、platform、C++ ABI が一致するものを選択します。対応する公式 Linux CUDA index では `cxx11abiTRUE` の wheel を使用します。
-
-### GPU・CUDA index の指定
+### オプション
 
 ```bash
 # 複数 GPU がある場合、構成判定に使う GPU を指定する（標準は 0）
@@ -109,14 +113,6 @@ FlashAttention wheel は CUDA、PyTorch、Python、platform、C++ ABI が一致�
 ```
 
 インストール済みの `ai-env` でも同じオプションを使えます。
-
-### dry-run の動作
-
-`--dry-run` は選択した依存構成を一時コピーへ反映し、`uv sync --dry-run` で検証します。解決に失敗すると非ゼロで終了します。
-
-- 対象ディレクトリの設定・lockfile・仮想環境は作成・変更しません。
-- GPU・ネットワークへのアクセスと `uv` キャッシュの更新は発生します。
-- workspace 設定のあるプロジェクトは未対応で、エラーになります。
 
 ## 動作確認
 
@@ -134,13 +130,38 @@ uv run python -c "import transformers, trl; print(transformers.__version__); pri
 uv run python -c "import flash_attn; print('flash_attn ok')"
 ```
 
-`nvidia-smi` が失敗する場合は、先に NVIDIA ドライバの問題を解消してください。
+## 自動選択の仕組み
 
-## 実装・運用上の注意
+### バージョンの選択ルール
+
+PyTorch は、安定版 FlashAttention 2 の公式 prebuilt wheel が存在する最大バージョンを選びます。Transformers / TRL は PyPI 上の最新バージョンを選び、`uv` で依存関係を解決します。
+
+### CUDA index と wheel の互換性
+
+PyTorch index は、NVIDIA ドライバが対応する CUDA の上限から選択します。これはインストール済み CUDA Toolkit のバージョンではありません。
+
+| ドライバが対応する CUDA の上限 | PyTorch index |
+| --- | --- |
+| 12.6 以上、12.8 未満 | `cu126` |
+| 12.8 以上、13.0 未満 | `cu128` |
+| 13.0 以上 | `cu130` |
+
+FlashAttention wheel は CUDA、PyTorch、Python、platform、C++ ABI が一致するものを選択します。対応する公式 Linux CUDA index では `cxx11abiTRUE` の wheel を使用します。
+
+## 運用上の注意
 
 - FlashAttention は GitHub Releases の wheel URL を直接指定します。PyPI からインストールすると source build に入る場合があります。
 - PyTorch を個別に更新すると FlashAttention wheel との ABI 互換性が崩れる可能性があります。更新には自動設定スクリプトを使用してください。
-- スクリプトは `uv run --script` で起動し、TOML の書式を保持する `tomlkit` と依存指定を解析する `packaging` を独立した環境で利用します。
+
+## 開発時の確認
+
+スクリプトは `uv run --script` で起動し、TOML の書式を保持する `tomlkit` と依存指定を解析する `packaging` を独立した環境で利用します。
+
+リポジトリのルートで単体テストを実行します。
+
+```bash
+uv run python -m unittest discover -s tests
+```
 
 GPU 環境を同期せずにスクリプトの構文を確認するには、次を実行します。
 
