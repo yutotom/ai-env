@@ -3,7 +3,7 @@ set -euo pipefail
 
 # インストーラーを別の作業ディレクトリから実行しても、正しい対象を参照する。
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-TARGET="$SCRIPT_DIR/scripts/ai_env.py"
+TARGET="$SCRIPT_DIR/src/ai_env.py"
 BIN_DIR="${BIN_DIR:-$HOME/.local/bin}"
 COMMAND_PATH="$BIN_DIR/ai-env"
 

@@ -21,7 +21,7 @@
 | `pyproject.toml` | ルート環境の Python・AI ライブラリ・PyTorch index の定義 |
 | `uv.lock` | ルート環境の固定済み依存関係 |
 | `.python-version` | ルート環境の Python バージョン |
-| `scripts/ai_env.py` | GPU と公開パッケージを調査し、互換構成を選択・反映する CLI |
+| `src/ai_env.py` | GPU と公開パッケージを調査し、互換構成を選択・反映する CLI |
 | `tests/test_ai_env.py` | CUDA、platform、FlashAttention wheel の選択ロジックの単体テスト |
 
 ## 作業時の原則
@@ -32,7 +32,7 @@
 - FlashAttention は source build を避け、対象環境に合う prebuilt wheel を使用してください。
 - FlashAttention wheel の CUDA、PyTorch、Python、platform、C++ ABI の互換性を崩さないでください。
 - PyTorch のバージョンと `[tool.uv.sources]` / `[[tool.uv.index]]` の CUDA variant は一体として扱ってください。
-- `scripts/ai_env.py` の自動選択結果を手作業の思い込みで上書きせず、GPU、driver、公開 wheel の実態を確認してください。
+- `src/ai_env.py` の自動選択結果を手作業の思い込みで上書きせず、GPU、driver、公開 wheel の実態を確認してください。
 - `.venv/`、キャッシュ、生成されたコマンド記録はコミット対象にしないでください。
 - 既存の未コミット変更を保持し、依頼と無関係なファイルを整形・修正しないでください。
 
@@ -53,13 +53,13 @@
 ```bash
 uv sync
 uv run python -m unittest discover -s tests
-uv run python -m py_compile scripts/ai_env.py
+uv run python -m py_compile src/ai_env.py
 ```
 
 自動構成スクリプトの安全な確認:
 
 ```bash
-./scripts/ai_env.py --dry-run
+./src/ai_env.py --dry-run
 ```
 
 `--dry-run` でも GPU、ネットワーク、`nvidia-smi`、GitHub Releases、PyPI を使用します。これらが利用できない環境では、単体テストを優先し、実機確認が未実施であることを報告してください。
@@ -68,7 +68,7 @@ uv run python -m py_compile scripts/ai_env.py
 
 - Python ロジックのみ: 単体テストと `py_compile` を実行してください。
 - ルート依存関係: 単体テストに加えて `uv sync` または最低限 `uv lock --check` を実行してください。
-- GPU 構成選択: 可能なら `./scripts/ai_env.py --dry-run` を実行し、選択された CUDA index と wheel を確認してください。
+- GPU 構成選択: 可能なら `./src/ai_env.py --dry-run` を実行し、選択された CUDA index と wheel を確認してください。
 - README の対応表やコマンド例に影響する変更: コード、設定、README を同時に更新してください。
 
 ## 完了時の報告
